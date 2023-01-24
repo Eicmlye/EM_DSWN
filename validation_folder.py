@@ -65,7 +65,7 @@ if __name__ == "__main__":
         print('Debug mode ON! ')
 
 
-    opt.load_name = './RunLocal/230123_101613_train/DSWN_epoch10_bs8_mu0_sigma30.pth'
+    opt.load_name = './RunLocal/230124_104845_train10Epochs/DSWN_epoch1_bs8_mu0_sigma30.pth'
 
     opt.loss_function = 'MSE'
     ## end EM Modified
@@ -80,7 +80,8 @@ if __name__ == "__main__":
     # ----------------------------------------
     #                 Testing
     # ----------------------------------------
-    model = utils.create_generator(opt).cuda()
+    checkpoint = torch.load(opt.load_name)
+    model = utils.create_generator(opt, checkpoint).cuda()
 
     ## EM Modified
     loss_data = []
