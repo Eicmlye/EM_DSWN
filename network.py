@@ -130,34 +130,14 @@ class DSWN(nn.Module):
         self.E2 = Conv2dLayer(in_channels = 3*4, out_channels = 256, kernel_size=3, stride = 1, padding = 1, dilation = 1,  pad_type = opt.pad, activation = 'prelu',norm = opt.norm)
         self.E3 = Conv2dLayer(in_channels = 3*4*4, out_channels = 256, kernel_size=3, stride = 1, padding = 1, dilation = 1,  pad_type = opt.pad, activation = 'prelu',norm = opt.norm)
         self.E4 = Conv2dLayer(in_channels = 3*4*16, out_channels = 256, kernel_size=3, stride = 1, padding = 1, dilation = 1,  pad_type = opt.pad, activation = 'prelu',norm = opt.norm)
-        # Bottle neck
-        self.BottleNeck = nn.Sequential(
-            ResConv2dLayer(256, 3, 1, 1, pad_type = opt.pad, norm = opt.norm),
-            ResConv2dLayer(256, 3, 1, 1, pad_type = opt.pad, norm = opt.norm),
-            ResConv2dLayer(256, 3, 1, 1, pad_type = opt.pad, norm = opt.norm),
-            ResConv2dLayer(256, 3, 1, 1, pad_type = opt.pad, norm = opt.norm)
-        )
+
         self.blockDMT11 = self.make_layer(_DCR_block, 320)
         self.blockDMT12 = self.make_layer(_DCR_block, 320)
         self.blockDMT13 = self.make_layer(_DCR_block, 320)
         self.blockDMT14 = self.make_layer(_DCR_block, 320)
         self.blockDMT21 = self.make_layer(_DCR_block, 512)
-        # self.blockDMT22 = self.make_layer(_DCR_block, 512)
-        # self.blockDMT23 = self.make_layer(_DCR_block, 512)
-        # self.blockDMT24 = self.make_layer(_DCR_block, 512)
         self.blockDMT31 = self.make_layer(_DCR_block, 512)
-        # self.blockDMT32 = self.make_layer(_DCR_block, 512)
-        # self.blockDMT33 = self.make_layer(_DCR_block, 512)
-        # self.blockDMT34 = self.make_layer(_DCR_block, 512)
         self.blockDMT41 = self.make_layer(_DCR_block, 256)
-        # self.blockDMT42 = self.make_layer(_DCR_block, 256)
-        # self.blockDMT43 = self.make_layer(_DCR_block, 256)
-        # self.blockDMT44 = self.make_layer(_DCR_block, 256)
-        # self.DRB11 = ResidualDenseBlock_5C(nf=320, gc=64)
-        # self.DRB12 = ResidualDenseBlock_5C(nf=320, gc=64)
-        # self.DRB21 = ResidualDenseBlock_5C(nf=512, gc=64)
-        # self.DRB31 = ResidualDenseBlock_5C(nf=512, gc=64)
-        # self.DRB41 = ResidualDenseBlock_5C(nf=256, gc=64)
         # Decoder
         self.D1 = Conv2dLayer(in_channels = 256, out_channels = 1024, kernel_size=3, stride = 1, padding = 1, dilation = 1,  pad_type = opt.pad, activation = 'prelu', norm = opt.norm)
         self.D2 = Conv2dLayer(in_channels = 512, out_channels = 1024, kernel_size=3, stride = 1, padding = 1, dilation = 1,  pad_type = opt.pad, activation = 'prelu', norm = opt.norm)
@@ -169,7 +149,6 @@ class DSWN(nn.Module):
         self.S2 = Conv2dLayer(in_channels = 512, out_channels = 512, kernel_size=1, stride = 1, padding = 0, dilation = 1,  pad_type = opt.pad, activation = 'none', norm = 'none')
         self.S3 = Conv2dLayer(in_channels = 320, out_channels = 320, kernel_size=1, stride = 1, padding = 0, dilation = 1,  pad_type = opt.pad, activation = 'none', norm = 'none')
         self.S4 = Conv2dLayer(in_channels = 320, out_channels = 320, kernel_size=1, stride = 1, padding = 0, dilation = 1, groups=3*320, pad_type = opt.pad, activation = 'none', norm = 'none')
-        # self.S5 = Conv2dLayer(in_channels = 3*320, out_channels = 320, kernel_size=1, stride = 1, padding = 0, dilation = 1, pad_type = opt.pad, activation = 'none', norm = 'none')
 
     def make_layer(self, block, channel_in):
         layers = []
@@ -220,11 +199,6 @@ class DSWN(nn.Module):
 
         ## EM COMMENT: top layers
         E4 = self.blockDMT41(E4)                        ## EM COMMENT: top layers, red block
-        # E4_2 = E4_1 + E4
-        # E4_3=self.blockDMT42(E4_2)
-        # E4 = E4_2+E4_3
-
-        # E4 = self.blockDMT43(E4)
         D1=self.D1(E4)                                  ## EM COMMENT: top layers, last orange block
         del E4
 
@@ -236,10 +210,6 @@ class DSWN(nn.Module):
         D1 = self.S1(D1)                                ## EM COMMENT: middle layers, green block
         D2=self.blockDMT31(D1)                          ## EM COMMENT: middle layers, red block
         del D1
-        # D2_2 = D1 + D2_1
-        # D2_3=self.blockDMT32(D2_2)
-        # D2 = D2_2+D2_3
-        # D2=self.blockDMT33(D1)
         D2=self.D2(D2)                                  ## EM COMMENT: middle layers, last orange block
 
         ## EM COMMENT: back to bottom block
@@ -250,10 +220,6 @@ class DSWN(nn.Module):
         D2 = self.S2(D2)                                ## EM COMMENT: bottom layers, green block
         D3=self.blockDMT21(D2)                          ## EM COMMENT: bottom layers, red block
         del D2
-        # D3_2 = D3_1 + D2
-        # D3_3=self.blockDMT22(D3_2)
-        # D3 = D3_2+D3_3
-        # D3=self.blockDMT23(D2)
         D3=self.D3(D3)                                  ## EM COMMENT: bottom layers, last orange block
 
         ## EM COMMENT: back to main stream

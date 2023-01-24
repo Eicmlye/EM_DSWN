@@ -91,7 +91,8 @@ if __name__ == "__main__":
     # ----------------------------------------
     #                 Testing
     # ----------------------------------------
-    model = utils.create_generator(opt).cuda()
+    checkpoint = torch.load(opt.load_name)
+    model = utils.create_generator(opt, checkpoint).cuda()
 
     ## EM Modified
     loss_data = []
