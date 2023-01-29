@@ -42,19 +42,41 @@ def create_optimizer(opt, generator, checkpoint):
     if not opt.pre_train:
         optimizer.load_state_dict(checkpoint['optimizer'])
     return optimizer
+
+def load_loss_data(load_loss_name):
+    '''
+    loss data file format: epoch_num    loss_data
+    '''
+    f = open(load_loss_name, 'r')
+
+    y = []
+    for line in f:
+        line = line.strip('\n')
+        line = line.rstrip()
+        words = line.split()
+
+        y.append(eval(words[1]))
+
+    f.close()
+
+    return y
     
-def save_loss_graph(opt, x, y):
+def save_loss_graph(opt, y):
     """
     Save the loss function curve vs. epochs or iterations.
 
     """
+    if opt.loss_function == 'MSE':
+        y = PSNR(y)
+
+    x = [i for i in range(1, len(y) + 1)]
 
     if opt.multi_gpu == True:
         pass
     else:
         if opt.save_mode == 'epoch':
             # if epoch == opt.epochs: # Save graph only when training is finished
-                plt.plot(x, y)
+                plt.plot(x, y, color='r', linestyle='-')
                 plt.savefig(opt.dir_path + 'Loss_Epoch.png', dpi=300)
                 print('Loss-Epoch graph successfully saved. ')
         else:
@@ -65,6 +87,9 @@ def save_loss_value(opt, y):
     Save the loss value for all epochs.
     
     """
+    if opt.loss_function == 'MSE':
+        psnr = PSNR(y)
+
     if opt.multi_gpu == True:
         pass
     else:
@@ -76,22 +101,23 @@ def save_loss_value(opt, y):
             file = open(save_path, 'w')
 
             for epoch in range(len(y)):
-                file.write(str(epoch + 1) + '\t:\t' + str(y[epoch]) + '\n')
+                file.write(str(epoch + 1) + '\t' + str(y[epoch]))
+                if opt.loss_function == 'MSE':
+                    file.write('\t' + str(psnr[epoch]))
+                file.write('\n')
 
             file.close()
             print('Loss value successfully saved. ')
         else:
             pass
 
-def save_loss_data(opt, x, y):
+def save_loss_data(opt, y):
     """
     Save the loss graph and loss value for all epochs.
     
     """
-    if opt.loss_function == 'MSE':
-        y = PSNR(y)
 
-    save_loss_graph(opt, x, y)
+    save_loss_graph(opt, y)
     save_loss_value(opt, y)
 ## end EM Modified
     

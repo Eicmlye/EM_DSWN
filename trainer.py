@@ -35,28 +35,26 @@ def Trainer(opt):
 
     ## EM Modified
     # initialize loss graph
-    x = []
     y = []
     plt.title('Training Loss vs. Epochs')
+    plt.xticks([i for i in range(0, opt.epochs + 1, opt.epochs // 20)])
+    plt.yticks(np.linspace(18, 35, (35 - 18) * 5 + 1))
     plt.xlabel('Epochs')
     if opt.loss_function == 'MSE':
         plt.ylabel('PSNR')
     else:
         plt.ylabel('L1 Loss')
     plt.ion() # activate interactive mode
-    
-    # save best loss value
-    best_loss = 10000
 
     # load checkpoint info
     if opt.pre_train:
         checkpoint = {}
+        best_loss = 10000
     else:
         checkpoint = torch.load(opt.load_name)
         opt.start_epoch = checkpoint['epoch']
-        x = [i for i in range(1, opt.start_epoch)]
-        y = checkpoint['loss_data']
         best_loss = checkpoint['best_loss']
+        y = utils.load_loss_data(opt.load_loss_name)
     ## end EM Modified
 
     # Initialize DSWN
@@ -71,44 +69,51 @@ def Trainer(opt):
 
     # Optimizers
     optimizer_G = utils.create_optimizer(opt, generator, checkpoint)
+
+    del checkpoint
     
     # Learning rate decrease
     def adjust_learning_rate(opt, iteration, optimizer):
         # Set the learning rate to the specific value
-        if iteration >= opt.iter_decreased:
+        for i in range(len(opt.iter_decreased) - 1):
+            if iteration >= opt.iter_decreased[i] and iteration < opt.iter_decreased[i + 1]:
+                for param_group in optimizer.param_groups:
+                    param_group['lr'] = opt.lr_decreased[i]
+                break
+        
+        if iteration >= opt.iter_decreased[-1]:
             for param_group in optimizer.param_groups:
-                param_group['lr'] = opt.lr_decreased
-
+                param_group['lr'] = opt.lr_decreased[-1]
     # Save the model if pre_train == True
-    def save_model(opt, epoch, iteration, len_dataset, network, optimizer, y, best_loss):
+    def save_model(opt, epoch, iteration, len_dataset, network, optimizer, best_loss):
         """Save the model at "checkpoint_interval" and its multiple"""
         if opt.multi_gpu == True:
             if opt.save_mode == 'epoch':
                 if (epoch % opt.save_by_epoch == 0) and (iteration % len_dataset == 0):
-                    torch.save(network.module.state_dict(), opt.dir_path + 'DSWN_epoch%d_bs%d_mu%d_sigma%d.pth' % (epoch, opt.batch_size, opt.mu, opt.sigma))
+                    torch.save(network.module.state_dict(), opt.dir_path + 'models/DSWN_epoch%d_bs%d_mu%d_sigma%d.pth' % (epoch, opt.batch_size, opt.mu, opt.sigma))
                     print('The trained model is successfully saved at epoch %d. ' % (epoch))
             if opt.save_mode == 'iter':
                 if iteration % opt.save_by_iter == 0:
-                    torch.save(network.module.state_dict(), opt.dir_path + 'DSWN_iter%d_bs%d_mu%d_sigma%d.pth' % (iteration, opt.batch_size, opt.mu, opt.sigma))
+                    torch.save(network.module.state_dict(), opt.dir_path + 'models/DSWN_iter%d_bs%d_mu%d_sigma%d.pth' % (iteration, opt.batch_size, opt.mu, opt.sigma))
                     print('The trained model is successfully saved at iteration %d. ' % (iteration))
         else:
             if opt.save_mode == 'epoch':
-                checkpoint = {'epoch':epoch, 'net':network.state_dict(), 'optimizer':optimizer.state_dict(), 'loss_data':y, 'best_loss':best_loss}
+                checkpoint = {'epoch':epoch, 'best_loss':best_loss, 'net':network.state_dict(), 'optimizer':optimizer.state_dict()}
                 if (epoch % opt.save_by_epoch == 0) and (iteration % len_dataset == 0):
-                    torch.save(checkpoint, opt.dir_path + 'DSWN_epoch%d_bs%d_mu%d_sigma%d.pth' % (epoch, opt.batch_size, opt.mu, opt.sigma))
+                    torch.save(checkpoint, opt.dir_path + 'models/DSWN_epoch%d_bs%d_mu%d_sigma%d.pth' % (epoch, opt.batch_size, opt.mu, opt.sigma))
                     print('The trained model is successfully saved at epoch %d. ' % (epoch))
             if opt.save_mode == 'iter':
-                checkpoint = {'iteration':iteration, 'net':network.state_dict(), 'optimizer':optimizer.state_dict(), 'loss_data':y, 'best_loss':best_loss}
+                checkpoint = {'iteration':iteration, 'best_loss':best_loss, 'net':network.state_dict(), 'optimizer':optimizer.state_dict()}
                 if iteration % opt.save_by_iter == 0:
-                    torch.save(checkpoint, opt.dir_path + 'DSWN_iter%d_bs%d_mu%d_sigma%d.pth' % (iteration, opt.batch_size, opt.mu, opt.sigma))
+                    torch.save(checkpoint, opt.dir_path + 'models/DSWN_iter%d_bs%d_mu%d_sigma%d.pth' % (iteration, opt.batch_size, opt.mu, opt.sigma))
                     print('The trained model is successfully saved at iteration %d. ' % (iteration))
 
-    def save_best_model(opt, loss, best_loss, epoch, network, optimizer, y):
-        if epoch > opt.epochs / 2 and best_loss > loss:
+    def save_best_model(opt, loss, best_loss, epoch, network, optimizer):
+        if best_loss > loss and epoch >= opt.epochs / 10:
             best_loss = loss
 
-            checkpoint = {'epoch':epoch, 'net':network.state_dict(), 'optimizer':optimizer.state_dict(), 'loss_data':y, 'best_loss':best_loss}
-            torch.save(checkpoint, opt.dir_path + 'DSWN_best_epoch%d_bs%d_mu%d_sigma%d.pth' % (epoch, opt.batch_size, opt.mu, opt.sigma))
+            checkpoint = {'epoch':epoch, 'best_loss':best_loss, 'net':network.state_dict(), 'optimizer':optimizer.state_dict()}
+            torch.save(checkpoint, opt.dir_path + 'best_models/DSWN_best_epoch%d_bs%d_mu%d_sigma%d.pth' % (epoch, opt.batch_size, opt.mu, opt.sigma))
             print('The best model is successfully updated. ')
         return best_loss
 
@@ -121,6 +126,7 @@ def Trainer(opt):
     ## EM COMMENT: if FullRes is used, the validloader batch_size should set to 1. 
     # validset = dataset.FullResDenoisingDataset(opt, opt.validroot)
     validset = dataset.DenoisingDataset(opt, opt.validroot)
+    len_valid = len(validset)
     print('The overall number of images:', len(trainset))
 
     # Define the dataloader
@@ -128,6 +134,7 @@ def Trainer(opt):
     ## EM COMMENT: if FullRes is used, the validloader batch_size should set to 1. 
     # validloader = DataLoader(validset, batch_size = 1, pin_memory = True)
     validloader = DataLoader(validset, batch_size = 1, pin_memory = True)
+    del trainset, validset
 
     # ----------------------------------------
     #                 Training
@@ -176,7 +183,7 @@ def Trainer(opt):
         ## EM Modified
         # validation
         print('---- Validation ----')
-        print('The overall number of validation images: ', len(validset))
+        print('The overall number of validation images: ', len_valid)
 
         loss_avg = 0
 
@@ -188,7 +195,9 @@ def Trainer(opt):
             # Forward propagation
             with torch.no_grad():
                 recon_valimg = generator(noisy_valimg)
+            
             valloss = loss_criterion(recon_valimg, valimg)
+
             loss_avg += valloss.item()
 
             # Print log
@@ -205,16 +214,15 @@ def Trainer(opt):
         else:
             print("Average loss for validation set: %.2f" % (loss_avg))
 
-        # Save model at certain epochs or iterations
-        save_model(opt, (epoch + 1), (iters_done + 1), len(dataloader), generator, optimizer_G, y, best_loss)
-        # update best loss and best model
-        best_loss = save_best_model(opt, loss_avg, best_loss, (epoch + 1), generator, optimizer_G, y)
-
         # save loss graph
         if opt.save_mode == 'epoch':
-            x.append(epoch + 1)
             y.append(loss_avg)
-            utils.save_loss_data(opt, x, y)
+            utils.save_loss_data(opt, y)
         else:
             pass
+
+        # Save model at certain epochs or iterations
+        save_model(opt, (epoch + 1), (iters_done + 1), len(dataloader), generator, optimizer_G, best_loss)
+        # update best loss and best model
+        best_loss = save_best_model(opt, loss_avg, best_loss, (epoch + 1), generator, optimizer_G)
         ## end EM Modified

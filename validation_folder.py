@@ -28,7 +28,7 @@ if __name__ == "__main__":
     parser.add_argument('--out_channels', type = int, default = 3, help = 'output channels for generator')
     parser.add_argument('--start_channels', type = int, default = 32, help = 'start channels for generator')
     parser.add_argument('--m_block', type = int, default = 2, help = 'the additional blocks used in mainstream')
-    parser.add_argument('--init_type', type = str, default = 'normal', help = 'initialization type of generator')
+    parser.add_argument('--init_type', type = str, default = 'xavier', help = 'initialization type of generator')
     parser.add_argument('--init_gain', type = float, default = 0.02, help = 'initialization gain of generator')
     # Dataset parameters
     parser.add_argument('--baseroot', type = str, default = "/home/alien/Documents/LINTingyu/denoising", help = 'the testing folder')
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         print('Debug mode ON! ')
 
 
-    opt.load_name = './RunLocal/230124_104845_train10Epochs/DSWN_epoch1_bs8_mu0_sigma30.pth'
+    opt.load_name = './RunLocal/230126_114757_train300Epochs/DSWN_epoch30_bs1_mu0_sigma30.pth'
 
     opt.loss_function = 'MSE'
     ## end EM Modified
@@ -93,6 +93,8 @@ if __name__ == "__main__":
         begin_time.tm_hour, begin_time.tm_min, begin_time.tm_sec)
     if not os.path.exists(opt.dir_path):
         os.makedirs(opt.dir_path)
+    if not os.path.exists(opt.dir_path + 'pics/'):
+        os.makedirs(opt.dir_path + 'pics/')
     ## end EM Modified 
 
     ## EM Note:
@@ -139,7 +141,7 @@ if __name__ == "__main__":
         cv2.imshow('comparison.jpg', show_img)
         cv2.waitKey(100)
         ## EM Modified: Added time-based directory name
-        cv2.imwrite(opt.dir_path + 'result_%04d.jpg' % (batch_idx + 801), show_img)
+        cv2.imwrite(opt.dir_path + 'pics/result_%04d.jpg' % (batch_idx + 801), show_img)
 
     ## EM Modified
     # save loss data
@@ -156,4 +158,6 @@ if __name__ == "__main__":
     file.write('Avg\t:\t' + str(sum(loss_data) / len(loss_data)))
 
     file.close()
+
+    print('Average loss: ', sum(loss_data) / len(loss_data))
     ## end EM Modified
