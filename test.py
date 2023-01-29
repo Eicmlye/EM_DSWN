@@ -27,13 +27,13 @@ if __name__ == "__main__":
     parser.add_argument('--debug_str', type = str, default = 'debug/debug_', help = 'add \'debug_\' to filename of saved file')
     ## end EM Modified
     # Initialization parameters
-    parser.add_argument('--pad', type = str, default = 'zero', help = 'pad type of networks')
+    parser.add_argument('--pad', type = str, default = 'reflect', help = 'pad type of networks')
     parser.add_argument('--norm', type = str, default = 'none', help = 'normalization type of networks')
     parser.add_argument('--in_channels', type = int, default = 3, help = 'input channels for generator')
     parser.add_argument('--out_channels', type = int, default = 3, help = 'output channels for generator')
     parser.add_argument('--start_channels', type = int, default = 32, help = 'start channels for generator')
     parser.add_argument('--m_block', type = int, default = 2, help = 'the additional blocks used in mainstream')
-    parser.add_argument('--init_type', type = str, default = 'normal', help = 'initialization type of generator')
+    parser.add_argument('--init_type', type = str, default = 'xavier', help = 'initialization type of generator')
     parser.add_argument('--init_gain', type = float, default = 0.02, help = 'initialization gain of generator')
     # Dataset parameters
     parser.add_argument('--baseroot', type = str, default = "/home/alien/Documents/LINTingyu/denoising", help = 'the testing folder')
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     else:
         pass # Unknown dataset, use opt.baseroot
 
-    opt.load_name = './RunLocal/230123_101613_train/DSWN_epoch10_bs8_mu0_sigma30.pth'
+    opt.load_name = './RunLocal/230126_114757_train300Epochs/DSWN_epoch30_bs1_mu0_sigma30.pth'
 
     opt.loss_function = 'MSE'
     ## end EM Modified
@@ -105,6 +105,8 @@ if __name__ == "__main__":
         + opt.dataset + '/'
     if not os.path.exists(opt.dir_path):
         os.makedirs(opt.dir_path)
+    if not os.path.exists(opt.dir_path + 'pics/'):
+        os.makedirs(opt.dir_path + 'pics/')
     ## end EM Modified 
 
     ## EM Note:
@@ -152,9 +154,9 @@ if __name__ == "__main__":
         cv2.waitKey(100)
         ## EM Modified: Added time-based directory name
         if opt.dataset == 'DIV2K':
-            cv2.imwrite(opt.dir_path + 'result_%04d.jpg' % (img_idx + 801), show_img)
+            cv2.imwrite(opt.dir_path + 'pics/result_%04d.jpg' % (img_idx + 801), show_img)
         else:
-            cv2.imwrite(opt.dir_path + 'result_%04d.jpg' % (img_idx), show_img)
+            cv2.imwrite(opt.dir_path + 'pics/result_%04d.jpg' % (img_idx), show_img)
 
     ## EM Modified
     # save loss data
@@ -171,4 +173,6 @@ if __name__ == "__main__":
     file.write('Avg\t:\t' + str(sum(loss_data) / len(loss_data)))
 
     file.close()
+
+    print('Average loss: ', sum(loss_data) / len(loss_data))
     ## end EM Modified
