@@ -37,8 +37,8 @@ if __name__ == "__main__":
     parser.add_argument('--b1', type = float, default = 0.5, help = 'Adam: decay of first order momentum of gradient')
     parser.add_argument('--b2', type = float, default = 0.999, help = 'Adam: decay of second order momentum of gradient')
     parser.add_argument('--weight_decay', type = float, default = 0, help = 'weight decay for optimizer')
-    parser.add_argument('--iter_decreased', type = list[int], default = [200 * 800, 250 * 800], help = 'the certain iteration that lr decreased')
-    parser.add_argument('--lr_decreased', type = list[float], default = [0.00005 * 1, 0.00001 * 1], help = 'decreased learning rate at certain epoch')
+    parser.add_argument('--iter_decreased', type = list, default = [200 * 800, 250 * 800], help = 'the certain iteration that lr decreased')
+    parser.add_argument('--lr_decreased', type = list, default = [0.00005 * 1, 0.00001 * 1], help = 'decreased learning rate at certain epoch')
     parser.add_argument('--num_workers', type = int, default = 4, help = 'number of cpu threads to use during batch generation')
     ## EM Modified
     parser.add_argument('--start_epoch', type = int, default = 0, help = 'the training will start at this epoch index')
