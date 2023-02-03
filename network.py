@@ -212,7 +212,7 @@ class DSWN(nn.Module):
         del D1
         D2=self.D2(D2)                                  ## EM COMMENT: middle layers, last orange block
 
-        ## EM COMMENT: back to bottom block
+        ## EM COMMENT: back to bottom layers
         D2=self._Itransformer(D2)
         IDMT3=self.IDWT(D2)
         D2=torch.cat((IDMT3, E2), 1)                    ## EM COMMENT: bottom layers, concat
