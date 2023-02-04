@@ -90,13 +90,13 @@ if __name__ == "__main__":
     ## EM Modified
     # training settings
     opt.epochs = 300
-    opt.save_by_epoch = 1 # or set to opt.epoch to save every trained model
+    opt.save_by_epoch = 10 # or set to opt.epoch to save every trained model
     opt.baseroot = './DIV2K_train_HR/'
     opt.validroot = './DIV2K_valid_HR/'
 
     ## EM COMMENT: my GPU memory is too small for 256 crop_size and 1 batch_size
-    opt.crop_size = 16
-    opt.batch_size = 32
+    opt.crop_size = 128
+    opt.batch_size = 2
 
     lr_inc = 1
     opt.lr = 0.00005 * lr_inc

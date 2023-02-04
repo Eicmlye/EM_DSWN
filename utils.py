@@ -4,6 +4,8 @@ import os
 ## EM Modified
 import matplotlib.pyplot as plt
 import time
+import pytorch_msssim # https://github.com/VainF/pytorch-msssim
+import piqa # https://github.com/francois-rozet/piqa
 ## end EM Modified
 
 import network
@@ -109,6 +111,7 @@ def save_loss_graph(opt, y):
 
     ## plot SSIM graph
     # np.linspace(lowerbound, upperbound, bound_dist * (ticks_in_open_interval_of_length_one + 1) + 1)
+    # np.linspace(lowerbound, upperbound, (bound_dist + 1) // step + 1)
     # np.linspace(lowerbound, upperbound, total_num_of_ticks)
     xticks = np.linspace(1, opt.epochs, (opt.epochs - 1 + 1) // 20 + 1, dtype=int)
     yticks = np.linspace(0, 1, (1 - 0) * 20 + 1)
@@ -160,6 +163,7 @@ def save_loss_data(opt, y):
 def PSNR(mse: float):
     return 20 * np.log10(255.0 / np.sqrt(mse))
 
+"""
 def SSIM(avg_img, avg_recon_img, var_img, var_recon_img, covar, max_pixel_value = 255):
     k1 = 0.01
     k2 = 0.03
@@ -169,6 +173,7 @@ def SSIM(avg_img, avg_recon_img, var_img, var_recon_img, covar, max_pixel_value 
     c2 = (k2 * L) ** 2
 
     return (2 * avg_img * avg_recon_img + c1) * (2 * covar + c2) / (avg_img ** 2 + avg_recon_img ** 2 + c1) / (var_img ** 2 + var_recon_img ** 2 + c2)
+"""
 
 def denormalize(img: torch.Tensor, recon_img: torch.Tensor):
     img = img.squeeze(0).cpu().numpy().transpose(1, 2, 0)
@@ -185,12 +190,13 @@ def PSNR_SSIM_img(img: torch.Tensor, recon_img: torch.Tensor):
     # for PSNR
         # notice that the dimension of img and noisy_img
         # is opt.batch_size * color_channel_num * opt.crop_size * opt.crop_size.
-    batch_size = img.shape[0]
+    """batch_size = img.shape[0]"""
     psnr = 0
     
     # for SSIM
     ssim = 0
 
+    """
     # computation
     for i in range(batch_size):
         cache_img, cache_recon_img = denormalize(img[i], recon_img[i])
@@ -206,9 +212,15 @@ def PSNR_SSIM_img(img: torch.Tensor, recon_img: torch.Tensor):
         var_recon_img = np.sqrt(np.mean((cache_recon_img - avg_recon_img)**2))
         covar = np.mean((cache_img - avg_img) * (cache_recon_img - avg_recon_img))
         ssim += SSIM(avg_img, avg_recon_img, var_img, var_recon_img, covar, 255)
-
+        """
+    """
     psnr /= batch_size
     ssim /= batch_size
+    """
+    # for piqa psnr
+    psnr = torch.mean(piqa.psnr.psnr((img + 1) * 128, (recon_img + 1) * 128, value_range=255)).item()
+    # for pytorch_ssim
+    ssim = pytorch_msssim.ssim((img + 1) * 128, (recon_img + 1) * 128).item()
 
     return psnr, ssim
 ## end EM Modified

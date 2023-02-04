@@ -72,7 +72,7 @@ if __name__ == "__main__":
     model = utils.create_generator(opt, checkpoint).cuda()
 
     ## EM Modified
-    loss_data = []
+    loss_data = [[],[]]
 
     # create time-based directory name
     opt.dir_path = utils.build_time_based_directory(opt, 'test')
@@ -90,7 +90,9 @@ if __name__ == "__main__":
             recon_img = model(noisy_img)
 
         ## EM Modified
-        loss_data.append(utils.PSNR_SSIM_img(img, recon_img))
+        psnr, ssim = utils.PSNR_SSIM_img(img, recon_img)
+        loss_data[0].append(psnr)
+        loss_data[1].append(ssim)
         ## end EM Modified
         
         # convert to visible image format
@@ -119,12 +121,12 @@ if __name__ == "__main__":
 
     file = open(save_path, 'w')
 
-    for picnum in range(len(loss_data)):
-        file.write(str(picnum + 1) + '\t' + str(loss_data[picnum][0]) + '\t' + str(loss_data[picnum][1]) + '\n')
+    for picnum in range(len(loss_data[0])):
+        file.write(str(picnum + 1) + '\t' + str(loss_data[0][picnum]) + '\t' + str(loss_data[1][picnum]) + '\n')
 
-    file.write('Avg\t' + str(sum(loss_data[0]) / len(loss_data)) + '\t' + str(sum(loss_data[1]) / len(loss_data)))
+    file.write('Avg\t' + str(sum(loss_data[0]) / len(loss_data[0])) + '\t' + str(sum(loss_data[1]) / len(loss_data[1])))
 
     file.close()
 
-    print('Average PSNR: ', sum(loss_data[0]) / len(loss_data), ', average SSIM: ', sum(loss_data[0]) / len(loss_data[1]))
+    print('Average PSNR: ', sum(loss_data[0]) / len(loss_data[0]), ', average SSIM: ', sum(loss_data[1]) / len(loss_data[1]))
     ## end EM Modified
