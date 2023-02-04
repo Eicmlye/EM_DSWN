@@ -30,7 +30,7 @@ def Trainer(opt):
     # load checkpoint info
     if opt.pre_train:
         checkpoint = {}
-        best_psnr = 100
+        best_psnr = -1
         best_ssim = -1
     else:
         checkpoint = torch.load(opt.load_name)
