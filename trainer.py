@@ -37,7 +37,7 @@ def Trainer(opt):
         opt.start_epoch = checkpoint['epoch']
         best_psnr = checkpoint['best_psnr']
         best_ssim = checkpoint['best_ssim']
-        y = utils.load_loss_data(opt.load_loss_name)
+        y = utils.load_loss_data(opt.start_epoch, opt.load_loss_name)
     ## end EM Modified
 
     # Initialize DSWN

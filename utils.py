@@ -60,7 +60,7 @@ def create_optimizer(opt, generator, checkpoint):
         optimizer.load_state_dict(checkpoint['optimizer'])
     return optimizer
 
-def load_loss_data(load_loss_name):
+def load_loss_data(cur_epoch, load_loss_name):
     '''
     loss data file format: epoch_num    PSNR    SSIM
     '''
@@ -74,6 +74,9 @@ def load_loss_data(load_loss_name):
 
         y[0].append(eval(words[1]))
         y[1].append(eval(words[2]))
+
+        if len(y[0]) == cur_epoch:
+            break
 
     f.close()
 
