@@ -173,7 +173,7 @@ class DSWN(nn.Module):
 
     def forward(self, x):
         noisy = x
-        ## EM COMMENT: DWT process
+        ## EM COMMENT: main stream, DWT process
         E1 = self.E1(x)                                 ## EM COMMENT: main stream, orange block
 
         ## EM COMMENT: go to bottom layers

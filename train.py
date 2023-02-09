@@ -9,6 +9,7 @@ if __name__ == "__main__":
     # ----------------------------------------
     parser = argparse.ArgumentParser()
     # Pre-train, saving, and loading parameters
+        ## EM COMMENT: the comment below is for SGN, not DSWN.
         # According to paper, the recommend setting is to train the model 
         # for 1M iterations, so it is better to save at each 100K iterations
         # The epoch is large enough that the model can be trained 
@@ -93,6 +94,7 @@ if __name__ == "__main__":
     opt.save_by_epoch = 10 # or set to opt.epoch to save every trained model
     opt.baseroot = './DIV2K_train_HR/'
     opt.validroot = './DIV2K_valid_HR/'
+    opt.init_type = 'xavier'
 
     ## EM COMMENT: my GPU memory is too small for 256 crop_size and 1 batch_size
     opt.crop_size = 128
@@ -106,11 +108,11 @@ if __name__ == "__main__":
     opt.lr_decreased = [i * lr_inc for i in opt.lr_decreased]
 
     ## if you are gonna continue train pre-trained model, activate this block
-    """ # comment this line to activate the block below
+    #""" # comment this line to activate the block below
     opt.pre_train = False
 
-    load_base = './RunLocal/230203_122755_Tot300Epo_bs32_mu0_sigma30/'
-    opt.load_name = load_base + 'models/DSWN_epoch1_bs32_mu0_sigma30.pth'
+    load_base = './RunLocal/230203_234058_Tot300Epo_bs2_mu0_sigma30/'
+    opt.load_name = load_base + 'models/DSWN_epoch90_bs2_mu0_sigma30.pth'
     opt.load_loss_name = load_base + 'PSNR_SSIM_value_Epoch.txt'
     #"""
     

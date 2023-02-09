@@ -1,10 +1,5 @@
 import time
 import datetime
-import numpy as np
-## EM Modified
-import matplotlib.pyplot as plt
-import sys # for exit()
-## end EM Modified
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
