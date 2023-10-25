@@ -9,15 +9,6 @@ if __name__ == "__main__":
     # ----------------------------------------
     parser = argparse.ArgumentParser()
     # Pre-train, saving, and loading parameters
-        ## EM COMMENT: the comment below is for SGN, not DSWN.
-        # According to paper, the recommend setting is to train the model 
-        # for 1M iterations, so it is better to save at each 100K iterations
-        # The epoch is large enough that the model can be trained 
-        # more than 1M iterations, users could stop it if it is well trained
-        # The learning rate is set to 1e-4 during first 500K iterations, 
-        # while it is 1e-5 during last 500K iterations
-        # For DIV2K dataset: epoch 10000 + batch_size 8 = iteration 1000000; 
-        # I recommend to save 10 models for the whole training stage
     parser.add_argument('--pre_train', type = bool, default = True, help = 'pre-train or not')
     parser.add_argument('--save_mode', type = str, default = 'epoch', help = 'saving mode, and by_epoch saving is recommended')
     parser.add_argument('--save_by_epoch', type = int, default = 1000, help = 'interval between model checkpoints (by epochs)')
@@ -42,7 +33,7 @@ if __name__ == "__main__":
     parser.add_argument('--weight_decay', type = float, default = 0, help = 'weight decay for optimizer')
     parser.add_argument('--iter_decreased', type = list, default = [200 * 800, 250 * 800], help = 'the certain iteration that lr decreased')
     parser.add_argument('--lr_decreased', type = list, default = [0.00005 * 1, 0.00001 * 1], help = 'decreased learning rate at certain epoch')
-    parser.add_argument('--num_workers', type = int, default = 1, help = 'number of cpu threads to use during batch generation')
+    parser.add_argument('--num_workers', type = int, default = 4, help = 'number of cpu threads to use during batch generation')
     ## EM Modified
     parser.add_argument('--start_epoch', type = int, default = 0, help = 'the training will start at this epoch index')
     ## end EM Modified
@@ -91,14 +82,14 @@ if __name__ == "__main__":
     ## EM Modified
     # training settings
     opt.epochs = 300
-    opt.save_by_epoch = 10 # or set to opt.epoch to save every trained model
+    opt.save_by_epoch = 100 # or set to opt.epoch to save every trained model
     opt.baseroot = './DIV2K_train_HR/'
     opt.validroot = './DIV2K_valid_HR/'
     opt.init_type = 'xavier'
 
     ## EM COMMENT: my GPU memory is too small for 256 crop_size and 1 batch_size
-    opt.crop_size = 128
-    opt.batch_size = 2
+    opt.crop_size = 256
+    opt.batch_size = 1
 
     lr_inc = 1
     opt.lr = 0.00005 * lr_inc
@@ -108,7 +99,7 @@ if __name__ == "__main__":
     opt.lr_decreased = [i * lr_inc for i in opt.lr_decreased]
 
     ## if you are gonna continue train pre-trained model, activate this block
-    #""" # comment this line to activate the block below
+    """ # comment this line to activate the block below
     opt.pre_train = False
 
     load_base = './RunLocal/230203_234058_Tot300Epo_bs2_mu0_sigma30/'

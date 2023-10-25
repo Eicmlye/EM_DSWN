@@ -15,3 +15,5 @@ Kodak24/
 
 # my test dataset for pure color images
 myTest/
+
+*.pth

@@ -152,6 +152,8 @@ def save_loss_graph(opt, y):
     plt.savefig(opt.dir_path + 'PSNR_SSIM_Epoch.png', dpi=300)
     print('Loss-Epoch graph successfully saved. ')
 
+    plt.close()
+
 def save_loss_value(opt, y):
     """
     Save the loss value for all epochs.
@@ -182,6 +184,12 @@ def save_loss_data(opt, y):
     save_loss_graph(opt, y)
     save_loss_value(opt, y)
 
+def MSE(x, y):
+    channel_mse = piqa.psnr.mse(x, y)
+    avg_mse = torch.mean(channel_mse)
+
+    return avg_mse
+
 """
 def PSNR(mse: float):
     return 20 * np.log10(255.0 / np.sqrt(mse))
@@ -195,7 +203,6 @@ def SSIM(avg_img, avg_recon_img, var_img, var_recon_img, covar, max_pixel_value 
     c2 = (k2 * L) ** 2
 
     return (2 * avg_img * avg_recon_img + c1) * (2 * covar + c2) / (avg_img ** 2 + avg_recon_img ** 2 + c1) / (var_img ** 2 + var_recon_img ** 2 + c2)
-"""
 
 def denormalize(img: torch.Tensor, recon_img: torch.Tensor):
     img = img.squeeze(0).cpu().numpy().transpose(1, 2, 0)
@@ -207,6 +214,7 @@ def denormalize(img: torch.Tensor, recon_img: torch.Tensor):
     recon_img = recon_img.astype(np.float32)
 
     return img, recon_img
+"""
 
 def PSNR_SSIM_img(img: torch.Tensor, recon_img: torch.Tensor):
     # for PSNR
@@ -239,7 +247,12 @@ def PSNR_SSIM_img(img: torch.Tensor, recon_img: torch.Tensor):
     ssim /= batch_size
     """
     # for piqa psnr
-    psnr = torch.mean(piqa.psnr.psnr((img + 1) * 128, (recon_img + 1) * 128, value_range=255)).item()
+    """
+    print(img[0].shape)
+    print(piqa.psnr.psnr((img[0] + 1) * 128, (recon_img[0] + 1) * 128, value_range=255).shape)
+    input()
+    #"""
+    psnr = torch.mean(piqa.psnr.psnr((img[0] + 1) * 128, (recon_img[0] + 1) * 128, value_range=255)).item()
     # for pytorch_ssim
     ssim = pytorch_msssim.ssim((img + 1) * 128, (recon_img + 1) * 128).item()
 

@@ -48,14 +48,14 @@ if __name__ == "__main__":
 
     ## EM Modified
     # set test dataset
-    opt.baseroot = './DIV2K_train_HR_forTest/'
+    # opt.baseroot = './DIV2K_train_HR_forTest/'
     # opt.baseroot = './DIV2K_valid_HR_forTest/'
-    # opt.baseroot = './CBSD68/original_png/'
+    opt.baseroot = './CBSD68/original_png/'
     # opt.baseroot = './BSD68/'
     # opt.baseroot = './Kodak24/'
     # opt.baseroot = './myTest/'
 
-    opt.load_name = './RunLocal/230204_094632_Tot300Epo_bs2_mu0_sigma30/best_models/DSWN_best_epoch95_bs2_mu0_sigma30.pth'
+    opt.load_name = './DSWN_epoch200_bs1_mu0_sigma30.pth'
     ## end EM Modified
 
     # Define the dataset
@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
         # show
         show_img = np.concatenate((img, noisy_img, recon_img), axis = 1)
-        b, g, r = cv2.split(show_img) ## EM DEBUG: originally being r, g, b
+        r, g, b = cv2.split(show_img)
         show_img = cv2.merge([b, g, r])
         cv2.imshow('comparison.jpg', show_img)
         cv2.waitKey(100)
