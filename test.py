@@ -1,8 +1,3 @@
-## EM Modified
-import time # for time-based directory name
-import os
-import sys
-## end EM Modified
 import argparse
 import cv2
 import numpy as np
@@ -53,13 +48,22 @@ if __name__ == "__main__":
 
     ## EM Modified
     # set test dataset
+    # opt.baseroot = './DIV2K_train_HR_forTest/'
+    # opt.baseroot = './DIV2K_valid_HR_forTest/'
     opt.baseroot = './CBSD68/original_png/'
+    # opt.baseroot = './BSD68/'
+    # opt.baseroot = './Kodak24/'
+    # opt.baseroot = './myTest/'
 
-    opt.load_name = './RunLocal/230203_003903_Tot300Epo_bs2_mu0_sigma30/best_models/DSWN_best_epoch38_bs2_mu0_sigma30.pth'
+    opt.load_name = './DSWN_epoch200_bs1_mu0_sigma30.pth'
     ## end EM Modified
 
     # Define the dataset
-    testset = dataset.FullResDenoisingDataset(opt) # Run full image without cropping
+    if opt.baseroot in ['./DIV2K_train_HR_forTest/', './DIV2K_valid_HR_forTest/']:
+        ## my GPU memory is too small for full sized DIV2K images
+        testset = dataset.DenoisingDataset(opt)
+    else:
+        testset = dataset.FullResDenoisingDataset(opt) # Run full image without cropping
     print('The overall number of images equals to %d. ' % len(testset))
 
     # Define the dataloader
@@ -72,7 +76,7 @@ if __name__ == "__main__":
     model = utils.create_generator(opt, checkpoint).cuda()
 
     ## EM Modified
-    loss_data = []
+    loss_data = [[],[]]
 
     # create time-based directory name
     opt.dir_path = utils.build_time_based_directory(opt, 'test')
@@ -90,7 +94,9 @@ if __name__ == "__main__":
             recon_img = model(noisy_img)
 
         ## EM Modified
-        loss_data.append(utils.PSNR_SSIM_img(img, recon_img))
+        psnr, ssim = utils.PSNR_SSIM_img(img, recon_img)
+        loss_data[0].append(psnr)
+        loss_data[1].append(ssim)
         ## end EM Modified
         
         # convert to visible image format
@@ -119,12 +125,12 @@ if __name__ == "__main__":
 
     file = open(save_path, 'w')
 
-    for picnum in range(len(loss_data)):
-        file.write(str(picnum + 1) + '\t' + str(loss_data[picnum][0]) + '\t' + str(loss_data[picnum][1]) + '\n')
+    for picnum in range(len(loss_data[0])):
+        file.write('%d\t%.8f\t%.8f\n' % (picnum + 1, loss_data[0][picnum], loss_data[1][picnum]))
 
-    file.write('Avg\t' + str(sum(loss_data[0]) / len(loss_data)) + '\t' + str(sum(loss_data[1]) / len(loss_data)))
+    file.write('Avg\t%.8f\t%.8f' % (sum(loss_data[0]) / len(loss_data[0]), sum(loss_data[1]) / len(loss_data[1])))
 
     file.close()
 
-    print('Average PSNR: ', sum(loss_data[0]) / len(loss_data), ', average SSIM: ', sum(loss_data[0]) / len(loss_data[1]))
+    print('Average PSNR: %.8f\nAverage SSIM: %.8f' % (sum(loss_data[0]) / len(loss_data[0]), sum(loss_data[1]) / len(loss_data[1])))
     ## end EM Modified

@@ -173,14 +173,14 @@ class DSWN(nn.Module):
 
     def forward(self, x):
         noisy = x
-        ## EM COMMENT: DWT process
+        ## EM COMMENT: main stream, DWT process
         E1 = self.E1(x)                                 ## EM COMMENT: main stream, orange block
 
         ## EM COMMENT: go to bottom layers
         DMT1_yl,DMT1_yh = self.DWT(x)
         DMT1 = self._transformer(DMT1_yl, DMT1_yh)      ## EM COMMENT: bottom layers, purple block
         del DMT1_yh, DMT1_yl
-        E2 = self.E2(DMT1)                              ## EM COMMENT: bottom layers, orange block
+        E2 = self.E2(DMT1)                              ## EM COMMENT: bottom layers, first orange block
 
         ## EM COMMENT: go to middle layers
         DMT2_yl, DMT2_yh = self.DWT(DMT1)

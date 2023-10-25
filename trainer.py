@@ -1,10 +1,5 @@
 import time
 import datetime
-import numpy as np
-## EM Modified
-import matplotlib.pyplot as plt
-import sys # for exit()
-## end EM Modified
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -30,14 +25,14 @@ def Trainer(opt):
     # load checkpoint info
     if opt.pre_train:
         checkpoint = {}
-        best_psnr = 100
+        best_psnr = -1
         best_ssim = -1
     else:
         checkpoint = torch.load(opt.load_name)
         opt.start_epoch = checkpoint['epoch']
         best_psnr = checkpoint['best_psnr']
         best_ssim = checkpoint['best_ssim']
-        y = utils.load_loss_data(opt.load_loss_name)
+        y = utils.load_loss_data(opt.start_epoch, opt.load_loss_name)
     ## end EM Modified
 
     # Initialize DSWN
@@ -94,7 +89,7 @@ def Trainer(opt):
                     print('The trained model is successfully saved at iteration %d. ' % (iteration))
 
     def save_best_model(opt, psnr, ssim, best_psnr, best_ssim, epoch, network, optimizer):
-        if best_psnr > psnr and best_ssim < ssim and epoch >= opt.epochs / 10:
+        if best_psnr < psnr and best_ssim < ssim and epoch >= opt.epochs / 10:
             best_psnr = psnr
             best_ssim = ssim
 
@@ -102,7 +97,7 @@ def Trainer(opt):
             torch.save(checkpoint, opt.dir_path + 'best_models/DSWN_best_epoch%d_bs%d_mu%d_sigma%d.pth' % (epoch, opt.batch_size, opt.mu, opt.sigma))
             print('The best model is successfully updated. This model is the best one in both PSNR and SSIM. ')
         else:
-            if best_psnr > psnr and epoch >= opt.epochs / 10:
+            if best_psnr < psnr and epoch >= opt.epochs / 10:
                 best_psnr = psnr
 
                 checkpoint = {'epoch':epoch, 'best_psnr':best_psnr, 'best_ssim':best_ssim, 'net':network.state_dict(), 'optimizer':optimizer.state_dict()}
@@ -139,6 +134,7 @@ def Trainer(opt):
 
     # Count start time
     prev_time = time.time()
+    validation_time = datetime.timedelta(seconds=30)
 
     # For loop training
     for epoch in range(opt.start_epoch, opt.epochs):
@@ -168,7 +164,7 @@ def Trainer(opt):
             # Determine approximate time left
             iters_done = epoch * len(dataloader) + i
             iters_left = opt.epochs * len(dataloader) - iters_done
-            time_left = datetime.timedelta(seconds = iters_left * (time.time() - prev_time))
+            time_left = validation_time * (opt.epochs - epoch) + datetime.timedelta(seconds = iters_left * (time.time() - prev_time))
             prev_time = time.time()
 
             # Print log
@@ -223,4 +219,7 @@ def Trainer(opt):
         best_psnr, best_ssim = save_best_model(opt, psnr_avg, ssim_avg, best_psnr, best_ssim, (epoch + 1), generator, optimizer_G)
         # Save model at certain epochs or iterations
         save_model(opt, (epoch + 1), (iters_done + 1), len(dataloader), generator, optimizer_G, best_psnr, best_ssim)
+        
+        validation_time = datetime.timedelta(seconds=time.time() - prev_time)
+        prev_time = time.time()
         ## end EM Modified
